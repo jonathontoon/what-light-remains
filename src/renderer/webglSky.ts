@@ -172,8 +172,10 @@ export function createSkyRenderer(
       window.devicePixelRatio,
       MAX_DEVICE_PIXEL_RATIO,
     );
-    canvas.width = Math.round(window.innerWidth * devicePixelRatio);
-    canvas.height = Math.round(window.innerHeight * devicePixelRatio);
+    const { width: cssWidth, height: cssHeight } =
+      canvas.getBoundingClientRect();
+    canvas.width = Math.round(cssWidth * devicePixelRatio);
+    canvas.height = Math.round(cssHeight * devicePixelRatio);
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
   };

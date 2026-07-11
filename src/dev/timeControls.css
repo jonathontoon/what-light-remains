@@ -1,0 +1,73 @@
+.dev-time-controls {
+  position: absolute;
+  top: 1.75rem;
+  left: 1.75rem;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 0.75rem;
+  width: min(22rem, calc(100vw - 3.5rem));
+  padding: 0.75rem;
+  color: rgb(255 255 255 / 78%);
+  font-size: 0.6875rem;
+  line-height: 1;
+  background: rgb(10 14 24 / 38%);
+  border-radius: 0.75rem;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 18%),
+    0 8px 28px rgb(0 0 0 / 16%);
+  backdrop-filter: blur(16px);
+}
+
+.dev-time-controls output {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.dev-time-controls input {
+  width: 100%;
+  min-height: 40px;
+  margin: 0;
+  accent-color: white;
+}
+
+.dev-time-controls button {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 0.625rem;
+  color: white;
+  font: inherit;
+  background: rgb(255 255 255 / 12%);
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition-property: background-color, opacity, scale;
+  transition-duration: 160ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.dev-time-controls button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 20%);
+}
+
+.dev-time-controls button:active:not(:disabled) {
+  scale: 0.96;
+}
+
+.dev-time-controls button:focus-visible {
+  outline: 1px solid rgb(255 255 255 / 70%);
+  outline-offset: 2px;
+}
+
+.dev-time-controls button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+@media (max-width: 640px) {
+  .dev-time-controls {
+    top: 1.25rem;
+    left: 1.25rem;
+    width: min(22rem, calc(100vw - 2.5rem));
+  }
+}

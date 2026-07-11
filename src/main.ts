@@ -1,3 +1,4 @@
+import type { TimeControls } from "./dev/timeControls";
 import { createSkyRenderer, type SkyRenderer } from "./renderer/webglSky";
 
 function getRequiredElement<T extends Element>(
@@ -17,11 +18,15 @@ const favicon = getRequiredElement("favicon", HTMLLinkElement);
 const errorMessage = getRequiredElement("error", HTMLParagraphElement);
 
 let renderer: SkyRenderer | null = null;
+let timeControls: TimeControls | null = null;
+let dayOverride: number | null = null;
 let animationFrame = 0;
 
 const stop = (): void => {
   window.cancelAnimationFrame(animationFrame);
   window.removeEventListener("resize", resize);
+  timeControls?.destroy();
+  timeControls = null;
   renderer?.destroy();
   renderer = null;
 };
@@ -29,13 +34,22 @@ const stop = (): void => {
 const resize = (): void => renderer?.resize();
 
 const render = (milliseconds: number): void => {
-  renderer?.render(milliseconds);
+  renderer?.render(milliseconds, dayOverride);
   animationFrame = window.requestAnimationFrame(render);
 };
 
 try {
   renderer = createSkyRenderer(canvas, favicon);
   renderer.resize();
+  if (import.meta.env.DEV) {
+    void import("./dev/timeControls").then(({ createTimeControls }) => {
+      if (renderer) {
+        timeControls = createTimeControls((override) => {
+          dayOverride = override;
+        });
+      }
+    });
+  }
   window.addEventListener("resize", resize);
   window.addEventListener("pagehide", stop, { once: true });
   animationFrame = window.requestAnimationFrame(render);

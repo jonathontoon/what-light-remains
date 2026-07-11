@@ -1,15 +1,14 @@
+import "./input.css";
+
 type ElementGuard<T extends Element> = (element: Element) => element is T;
 
 type UniformLocations = Readonly<{
   resolution: WebGLUniformLocation;
   time: WebGLUniformLocation;
   day: WebGLUniformLocation;
-  latitude: WebGLUniformLocation;
-  daylight: WebGLUniformLocation;
 }>;
 
 const DAY_MINUTES = 24 * 60;
-const DEFAULT_LATITUDE = 36.8;
 const MAX_DEVICE_PIXEL_RATIO = 2;
 
 const vertexSource = `attribute vec2 position; void main() { gl_Position = vec4(position, 0.0, 1.0); }`;
@@ -18,8 +17,6 @@ precision highp float;
 uniform vec2 resolution;
 uniform float time;
 uniform float day;
-uniform float latitude;
-uniform float daylight;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p) { vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y); }
@@ -44,17 +41,11 @@ void main() {
   vec2 uv = gl_FragCoord.xy / resolution.xy;
   float aspect = resolution.x / resolution.y;
   vec2 p = uv - .5; p.x *= aspect;
-  float localTime = fract(day + time * .0000015);
+  float localTime = fract(day);
   float drift = sin(time * .00007 + p.y * 3.0) * .012 + noise(uv * 2.3 + time*.000025) * .018;
   vec3 top = ramp(localTime + .02);
   vec3 bottom = ramp(localTime - .10);
   vec3 color = mix(top, bottom, smoothstep(.10,.92,uv.y) + drift);
-  float latitudeMod = clamp(abs(latitude) / 90.0, 0.0, 1.0);
-  color *= 1.0 - latitudeMod * .06;
-  color *= mix(.90, 1.06, daylight);
-  float warmthCycle = sin(localTime * 6.283185);
-  float haze = exp(-abs(uv.y - .48) * 18.0);
-  color += haze * vec3(1.0,.55,.22) * .035 * (1.0 - abs(warmthCycle));
   float vignette = 1.0 - smoothstep(.24,.82,length(p / vec2(aspect,.8)));
   color *= .88 + vignette * .12;
   gl_FragColor = vec4(pow(max(color,0.0), vec3(.92)), 1.0);
@@ -160,27 +151,6 @@ function getLocalMinutes(date: Date): number {
   return date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60;
 }
 
-function getLatitude(): number {
-  const storedLatitude = localStorage.getItem("sky-latitude");
-  if (storedLatitude === null) {
-    return DEFAULT_LATITUDE;
-  }
-
-  const latitude = Number(storedLatitude);
-  return Number.isFinite(latitude) && Math.abs(latitude) <= 90
-    ? latitude
-    : DEFAULT_LATITUDE;
-}
-
-function isDaylightSavingTime(date: Date): boolean {
-  const januaryOffset = new Date(date.getFullYear(), 0, 1).getTimezoneOffset();
-  const julyOffset = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
-  return (
-    januaryOffset !== julyOffset &&
-    date.getTimezoneOffset() === Math.min(januaryOffset, julyOffset)
-  );
-}
-
 function updateFaviconFromFrame(
   gl: WebGLRenderingContext,
   canvas: HTMLCanvasElement,
@@ -218,23 +188,6 @@ const favicon = getRequiredElement(
   "an HTMLLinkElement",
   (element): element is HTMLLinkElement => element instanceof HTMLLinkElement,
 );
-const infoTrigger = getRequiredElement(
-  "#info-trigger",
-  "an HTMLButtonElement",
-  (element): element is HTMLButtonElement =>
-    element instanceof HTMLButtonElement,
-);
-const infoPanel = getRequiredElement(
-  "#info-panel",
-  "an HTMLElement",
-  (element): element is HTMLElement => element instanceof HTMLElement,
-);
-const infoClose = getRequiredElement(
-  "#info-close",
-  "an HTMLButtonElement",
-  (element): element is HTMLButtonElement =>
-    element instanceof HTMLButtonElement,
-);
 const gl = getWebGLContext(canvas);
 const program = createProgram(
   gl,
@@ -262,24 +215,9 @@ const uniforms: UniformLocations = {
   resolution: getRequiredUniformLocation(gl, program, "resolution"),
   time: getRequiredUniformLocation(gl, program, "time"),
   day: getRequiredUniformLocation(gl, program, "day"),
-  latitude: getRequiredUniformLocation(gl, program, "latitude"),
-  daylight: getRequiredUniformLocation(gl, program, "daylight"),
 };
 
-const now = new Date();
-const latitude = getLatitude();
-const daylightSaving = isDaylightSavingTime(now) ? 1 : 0;
 const renderState = { lastFaviconSecond: -1 };
-
-function setInfoOpen(open: boolean): void {
-  infoTrigger.setAttribute("aria-expanded", String(open));
-  infoPanel.setAttribute("aria-hidden", String(!open));
-  infoPanel.classList.toggle("pointer-events-none", !open);
-  infoPanel.classList.toggle("opacity-0", !open);
-  infoPanel.classList.toggle("translate-y-[-8px]", !open);
-  infoPanel.classList.toggle("opacity-100", open);
-  infoPanel.classList.toggle("translate-y-0", open);
-}
 
 function resize(): void {
   const devicePixelRatio = Math.min(
@@ -296,23 +234,17 @@ function tick(milliseconds: number): void {
   const currentMinutes = getLocalMinutes(new Date());
   gl.uniform1f(uniforms.time, milliseconds);
   gl.uniform1f(uniforms.day, currentMinutes / DAY_MINUTES);
-  gl.uniform1f(uniforms.latitude, latitude);
-  gl.uniform1f(uniforms.daylight, daylightSaving);
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-  const second = Math.floor(milliseconds / 1000);
-  if (second !== renderState.lastFaviconSecond) {
-    renderState.lastFaviconSecond = second;
+  const frameSecond = Math.floor(milliseconds / 1000);
+  if (frameSecond !== renderState.lastFaviconSecond) {
+    renderState.lastFaviconSecond = frameSecond;
     updateFaviconFromFrame(gl, canvas, favicon);
   }
 
   window.requestAnimationFrame(tick);
 }
 
-infoTrigger.addEventListener("click", () => {
-  setInfoOpen(infoTrigger.getAttribute("aria-expanded") !== "true");
-});
-infoClose.addEventListener("click", () => setInfoOpen(false));
 window.addEventListener("resize", resize);
 
 resize();

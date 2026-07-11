@@ -9,7 +9,7 @@ Inspired by Explosions in the Sky and their song "Remember Me as a Time of Day."
 ## Built with
 
 - WebGL and a fragment shader
-- Vanilla JavaScript
+- Vanilla TypeScript
 - Tailwind CSS
 
 ## Credits

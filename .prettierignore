@@ -1,0 +1,6 @@
+dist/
+node_modules/
+.playwright-mcp/
+output/
+package-lock.json
+pnpm-lock.yaml

@@ -56,7 +56,7 @@ try {
 
   window.addEventListener("resize", resize);
   window.addEventListener("pagehide", stop, { once: true });
-  window.addEventListener("click", () => {
+  window.addEventListener("pointerup", () => {
     artworkDetails?.classList.toggle("hidden");
   });
   if (params.has("hide_text") || params.get("hidden") === "true") {

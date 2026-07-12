@@ -42,7 +42,7 @@ canvas {
   z-index: 10;
   margin: 0;
   padding: 2rem;
-  color: rgb(255 255 255 / 70%);
+  color: rgb(255 255 255 / 80%);
   font-size: 0.875rem;
 }
 
@@ -54,7 +54,7 @@ aside {
   );
   z-index: 10;
   max-width: 15rem;
-  color: rgb(255 255 255 / 60%);
+  color: rgb(255 255 255 / 80%);
   font-size: 0.625rem;
   line-height: 1.45;
   letter-spacing: 0.03em;
@@ -76,7 +76,7 @@ aside p {
 }
 
 aside .title {
-  color: rgb(255 255 255 / 80%);
+  color: rgb(255 255 255);
   font-weight: 500;
 }
 
@@ -95,7 +95,7 @@ aside a:hover {
 
 aside a:focus-visible {
   border-radius: 0.125rem;
-  outline: 1px solid rgb(255 255 255 / 60%);
+  outline: 1px solid rgb(255 255 255 / 80%);
   outline-offset: 2px;
 }
 

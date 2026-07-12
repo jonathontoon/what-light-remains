@@ -59,7 +59,7 @@ try {
   window.addEventListener("click", () => {
     artworkDetails?.classList.toggle("hidden");
   });
-  if (params.get("hidden") === "true") {
+  if (params.has("hide_text") || params.get("hidden") === "true") {
     artworkDetails?.classList.add("hidden");
   }
   animationFrame = window.requestAnimationFrame(render);
